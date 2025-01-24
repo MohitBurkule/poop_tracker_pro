@@ -15,6 +15,8 @@
       --secondary-color: #FFEB3B;
       --background: #F5F5F5;
       --text-color: #333;
+      --card-bg: #FFFFFF;
+      --box-shadow-color: rgba(0, 0, 0, 0.1);
     }
 
     body {
@@ -39,13 +41,14 @@
     }
 
     nav {
-      background: white;
+      background: var(--card-bg);
       padding: 1rem;
       border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 5px var(--box-shadow-color);
       margin-bottom: 20px;
       display: flex;
       justify-content: center;
+      flex-wrap: wrap;
       gap: 20px;
     }
 
@@ -54,21 +57,21 @@
       color: var(--primary-color);
       text-decoration: none;
       font-weight: 500;
-      padding: 5px 10px;
+      padding: 8px 16px;
       border-radius: 5px;
       transition: all 0.3s;
     }
 
     nav a:hover {
       background: var(--primary-color);
-      color: white;
+      color: #fff;
     }
 
     .card {
-      background: white;
-      padding: 2rem;
+      background: var(--card-bg);
+      padding: 1.5rem;
       border-radius: 15px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 10px var(--box-shadow-color);
       margin-bottom: 20px;
     }
 
@@ -78,7 +81,7 @@
 
     label {
       display: block;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.3rem;
       font-weight: 500;
     }
 
@@ -87,7 +90,7 @@
     select,
     textarea {
       width: 100%;
-      padding: 0.8rem;
+      padding: 0.7rem;
       border: 1px solid #ddd;
       border-radius: 8px;
       font-size: 1rem;
@@ -97,41 +100,48 @@
       background: var(--primary-color);
       color: white;
       border: none;
-      padding: 0.8rem 1.5rem;
+      padding: 0.7rem 1rem;
       border-radius: 8px;
       cursor: pointer;
       transition: transform 0.2s;
-      margin-right: 0.5rem;
+      margin-top: 0.25rem;
+      margin-bottom: 0.25rem;
     }
 
     button:hover {
       transform: translateY(-2px);
     }
 
+    .calendar-container {
+      overflow-x: auto; /* prevent horizontal overflow on mobile */
+    }
+
     .calendar {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       gap: 5px;
+      min-width: 600px; /* so it can scroll on narrow screens */
       margin-top: 1rem;
     }
 
     .day {
-      background: white;
+      background: var(--card-bg);
       border: 1px solid #eee;
-      padding: 1rem;
-      min-height: 100px;
+      padding: 0.7rem;
+      min-height: 90px;
       position: relative;
       transition: all 0.3s;
+      cursor: pointer;
     }
 
     .day:hover {
-      transform: scale(1.05);
+      transform: scale(1.03);
       z-index: 1;
     }
 
     .poop-indicator {
-      width: 20px;
-      height: 20px;
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
       background: var(--primary-color);
       display: inline-block;
@@ -152,6 +162,7 @@
       border-radius: 10px;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
       animation: slideIn 0.3s ease-out;
+      z-index: 9999;
     }
 
     @keyframes slideIn {
@@ -174,11 +185,13 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 1rem;
       margin-bottom: 2rem;
     }
@@ -188,7 +201,135 @@
       border-radius: 8px;
       text-align: center;
       padding: 1rem;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 5px var(--box-shadow-color);
+    }
+
+    /* Last 5 Poops list */
+    .recent-poops {
+      margin-top: 1.5rem;
+    }
+    .recent-poops h3 {
+      margin-bottom: 0.5rem;
+    }
+    .poop-item {
+      display: flex;
+      justify-content: space-between;
+      background: #f9f9f9;
+      padding: 0.5rem;
+      margin-bottom: 5px;
+      border-radius: 6px;
+      align-items: center;
+    }
+    .poop-info {
+      font-size: 0.9rem;
+    }
+
+    /* Day Details Modal */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .modal.active {
+      display: flex;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 500px;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h3 {
+      margin: 0;
+    }
+    .close-modal {
+      background: transparent;
+      color: #666;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    /* Multi-select dropdown styling */
+    .multi-select-container {
+      position: relative;
+    }
+    .multi-select-display {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.7rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+      cursor: pointer;
+    }
+    .multi-select-options {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px var(--box-shadow-color);
+      z-index: 10;
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 0.5rem;
+      display: none;
+    }
+    .multi-select-options.active {
+      display: block;
+    }
+    .multi-select-options label {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .multi-select-options input[type="checkbox"] {
+      margin-right: 8px;
+    }
+
+    /* Settings: custom fields list */
+    .custom-fields-list {
+      margin: 1rem 0;
+      background: #fafafa;
+      padding: 0.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px var(--box-shadow-color);
+    }
+    .custom-field-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      padding: 0.5rem;
+      border-bottom: 1px solid #eee;
+    }
+    .custom-field-item:last-child {
+      border-bottom: none;
+    }
+
+    /* Extra spacing for buttons in form groups on mobile */
+    @media (max-width: 600px) {
+      .form-group button {
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+      }
     }
   </style>
 </head>
@@ -240,10 +381,14 @@
         <div id="custom-fields"></div>
 
         <div class="form-group">
-          <!-- Preserving "Add Custom Attribute" button (though you can also do it in Settings) -->
-          <button onclick="addCustomFieldPrompt()">Add Custom Attribute</button>
           <button onclick="savePoop()">Save Entry</button>
         </div>
+      </div>
+
+      <!-- Show last 5 poops -->
+      <div class="recent-poops">
+        <h3>Last 5 Poops:</h3>
+        <div id="recent-poops-list"></div>
       </div>
     </div>
   </div>
@@ -256,7 +401,22 @@
         <h2 id="current-month"></h2>
         <button onclick="changeMonth(1)">Next →</button>
       </div>
-      <div id="calendar-view"></div>
+      <div class="calendar-container">
+        <div id="calendar-view" class="calendar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Day Details Modal -->
+  <div id="day-modal" class="modal" onclick="modalBackgroundClick(event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="day-modal-title"></h3>
+        <button class="close-modal" onclick="closeDayModal()">×</button>
+      </div>
+      <div id="day-modal-body">
+        <!-- Poop details for the day get injected here -->
+      </div>
     </div>
   </div>
 
@@ -283,13 +443,16 @@
         </div>
       </div>
 
+      <!-- Standard Charts -->
       <div class="chart-container">
         <canvas id="consistencyChart"></canvas>
       </div>
-
       <div class="chart-container">
         <canvas id="timeChart"></canvas>
       </div>
+
+      <!-- Custom Attributes Charts -->
+      <div id="custom-attribute-charts"></div>
     </div>
   </div>
 
@@ -308,12 +471,12 @@
         <label for="newFieldType">Attribute Type</label>
         <select id="newFieldType">
           <option value="text">Text</option>
-          <option value="radio">Radio</option>
+          <option value="select">Single-select (Dropdown)</option>
           <option value="multiselect">Multi-select</option>
         </select>
       </div>
       <div class="form-group">
-        <label for="newFieldOptions">Options (for Radio/Multi-select, comma separated)</label>
+        <label for="newFieldOptions">Options (for Single/Multi-select, comma separated)</label>
         <input
           type="text"
           id="newFieldOptions"
@@ -325,7 +488,13 @@
       </div>
 
       <hr />
+      <!-- List existing custom fields with delete option -->
+      <div>
+        <h3>Existing Custom Attributes</h3>
+        <div class="custom-fields-list" id="existing-custom-fields"></div>
+      </div>
 
+      <hr />
       <!-- Export / Import -->
       <div class="form-group">
         <button onclick="exportData()">Export Data</button>
@@ -342,35 +511,36 @@
     const DateTime = luxon.DateTime;
     let currentMonth = DateTime.now();
 
-    // Attempt to parse customFields from localStorage; handle old (string array) format
+    // Attempt to parse customFields from localStorage
     let rawCustomFields = localStorage.getItem('customFields');
     let customFields = [];
     if (rawCustomFields) {
       try {
-        let parsed = JSON.parse(rawCustomFields);
-        // If old format was array of strings, convert each to an object
-        if (Array.isArray(parsed)) {
-          // Check if the first element is a string => old format
-          if (parsed.length && typeof parsed[0] === 'string') {
-            parsed = parsed.map((fieldName) => ({
-              name: fieldName,
-              type: 'text',
-              options: []
-            }));
+        customFields = JSON.parse(rawCustomFields);
+        // Migrate old "radio" to "select"
+        customFields.forEach((f) => {
+          if (f.type === 'radio') {
+            f.type = 'select';
           }
-          customFields = parsed;
-        }
+        });
       } catch (e) {
-        // fallback
         customFields = [];
       }
     }
 
     let poopEntries = JSON.parse(localStorage.getItem('poopEntries') || '[]');
+    // Ensure each poop entry has an id
+    poopEntries.forEach((entry) => {
+      if (!entry.id) {
+        entry.id = Date.now().toString() + Math.random().toString(16).slice(2);
+      }
+    });
+    localStorage.setItem('poopEntries', JSON.stringify(poopEntries));
+
     let charts = {};
 
     // --------------------------------
-    // NAVIGATION + PAGE HANDLING
+    // NAVIGATION
     // --------------------------------
     function showPage(pageId) {
       document
@@ -380,40 +550,27 @@
 
       if (pageId === 'calendar') renderCalendar();
       if (pageId === 'analysis') updateAnalysis();
+      if (pageId === 'track') updateRecentPoops();
+      if (pageId === 'settings') renderSettingsPage();
 
       // Destroy existing charts when leaving analysis page
-      if (pageId !== 'analysis' && charts.consistencyChart) {
-        charts.consistencyChart.destroy();
-        charts.timeChart.destroy();
-      }
-    }
-
-    // --------------------------------
-    // CUSTOM FIELDS (SETTINGS & TRACK)
-    // --------------------------------
-    // Called from the track page button: Prompts user for name only, sets type=text
-    function addCustomFieldPrompt() {
-      const fieldName = prompt('Enter attribute name:');
-      if (fieldName) {
-        // Add as text type by default
-        const newField = {
-          name: fieldName,
-          type: 'text',
-          options: []
-        };
-        // Check if already exists
-        if (!customFields.find((f) => f.name === fieldName)) {
-          customFields.push(newField);
-          localStorage.setItem('customFields', JSON.stringify(customFields));
-          renderCustomFields(); // re-render
-          showNotification('New custom attribute added (type=text)!');
-        } else {
-          showNotification('Field name already exists!');
+      if (pageId !== 'analysis') {
+        if (charts.consistencyChart) {
+          charts.consistencyChart.destroy();
+          charts.timeChart.destroy();
         }
+        Object.keys(charts).forEach((key) => {
+          if (key !== 'consistencyChart' && key !== 'timeChart' && charts[key]) {
+            charts[key].destroy();
+          }
+        });
+        charts = {};
       }
     }
 
-    // Called from the Settings page form
+    // --------------------------------
+    // CUSTOM FIELDS
+    // --------------------------------
     function addCustomFieldFromSettings() {
       const fieldName = document.getElementById('newFieldName').value.trim();
       const fieldType = document.getElementById('newFieldType').value;
@@ -432,14 +589,13 @@
         return;
       }
 
-      // For radio/multiselect, parse the options
       let optionsArray = [];
-      if (fieldType === 'radio' || fieldType === 'multiselect') {
+      if (fieldType === 'select' || fieldType === 'multiselect') {
         optionsArray = fieldOptions
           ? fieldOptions.split(',').map((o) => o.trim())
           : [];
         if (!optionsArray.length) {
-          showNotification('Please specify options for radio/multiselect.');
+          showNotification('Please specify options for single/multi-select.');
           return;
         }
       }
@@ -459,11 +615,61 @@
       document.getElementById('newFieldOptions').value = '';
 
       showNotification(`Custom attribute "${fieldName}" added!`);
-      // Re-render custom fields on the track page if user navigates there
-      renderCustomFields();
+      renderSettingsPage();
+      renderCustomFields(); // refresh track page fields
     }
 
-    // Renders the custom fields on the "Track Poop" page according to their type
+    function deleteCustomField(fieldName) {
+      // Check if this field has data in poopEntries
+      const hasData = poopEntries.some((entry) => entry[fieldName]);
+      let confirmMsg = `Are you sure you want to delete the attribute "${fieldName}"?`;
+      if (hasData) {
+        confirmMsg += `\nWarning: This will remove the data from existing entries!`;
+      }
+      const ok = confirm(confirmMsg);
+      if (!ok) return;
+
+      // Remove from customFields
+      customFields = customFields.filter((f) => f.name !== fieldName);
+      localStorage.setItem('customFields', JSON.stringify(customFields));
+      // Remove that attribute from all poopEntries
+      poopEntries.forEach((entry) => {
+        if (entry[fieldName] !== undefined) {
+          delete entry[fieldName];
+        }
+      });
+      localStorage.setItem('poopEntries', JSON.stringify(poopEntries));
+
+      showNotification(`Deleted attribute "${fieldName}".`);
+      renderSettingsPage();
+      renderCustomFields(); // refresh track page fields
+    }
+
+    function renderSettingsPage() {
+      // Render list of existing custom fields
+      const container = document.getElementById('existing-custom-fields');
+      container.innerHTML = '';
+
+      if (customFields.length === 0) {
+        container.textContent = 'No custom attributes defined.';
+        return;
+      }
+      customFields.forEach((f) => {
+        const div = document.createElement('div');
+        div.className = 'custom-field-item';
+        div.innerHTML = `
+          <span><strong>${f.name}</strong> (${f.type}) ${
+          f.options.length ? '- ' + f.options.join(', ') : ''
+        }</span>
+          <button style="background:#f44336" onclick="deleteCustomField('${
+            f.name
+          }')">Delete</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // Render custom fields on "Track Poop" page
     function renderCustomFields() {
       const container = document.getElementById('custom-fields');
       container.innerHTML = ''; // Clear existing
@@ -474,40 +680,81 @@
         div.innerHTML = `<label>${field.name}</label>`;
 
         if (field.type === 'text') {
-          div.innerHTML += `<input type="text" id="custom-${field.name}">`;
-        } else if (field.type === 'radio') {
-          // Create radio buttons for each option
-          field.options.forEach((opt, idx) => {
-            const radioId = `custom-${field.name}-${idx}`;
-            div.innerHTML += `
-              <div>
-                <input type="radio" name="custom-${field.name}" id="${radioId}" value="${opt}">
-                <label for="${radioId}">${opt}</label>
-              </div>
-            `;
+          div.innerHTML += `<input type="text" id="custom-${field.name}" />`;
+        } else if (field.type === 'select') {
+          // Single-select dropdown
+          let selectHtml = `<select id="custom-${field.name}">`;
+          selectHtml += `<option value="">-- Select --</option>`;
+          field.options.forEach((opt) => {
+            selectHtml += `<option value="${opt}">${opt}</option>`;
           });
+          selectHtml += `</select>`;
+          div.innerHTML += selectHtml;
         } else if (field.type === 'multiselect') {
-          // Create checkboxes for each option
-          field.options.forEach((opt, idx) => {
-            const checkId = `custom-${field.name}-${idx}`;
-            div.innerHTML += `
-              <div>
-                <input type="checkbox" name="custom-${field.name}" id="${checkId}" value="${opt}">
-                <label for="${checkId}">${opt}</label>
+          // A custom multi-select
+          const containerId = `multi-${field.name}`;
+          const optionsId = `multi-options-${field.name}`;
+          // We store the selected values in an array
+          div.innerHTML += `
+            <div class="multi-select-container" id="${containerId}">
+              <div class="multi-select-display" onclick="toggleMultiSelect('${containerId}', '${optionsId}')">
+                <span id="${containerId}-labels">Select options</span>
+                <span>▼</span>
               </div>
-            `;
-          });
+              <div class="multi-select-options" id="${optionsId}">
+                ${field.options
+                  .map(
+                    (opt, i) => `
+                    <label>
+                      <input type="checkbox" value="${opt}" onchange="updateMultiSelectLabel('${containerId}', '${optionsId}')"/>
+                      ${opt}
+                    </label>
+                  `
+                  )
+                  .join('')}
+              </div>
+            </div>
+          `;
         }
-
         container.appendChild(div);
       });
     }
 
+    function toggleMultiSelect(containerId, optionsId) {
+      const opts = document.getElementById(optionsId);
+      opts.classList.toggle('active');
+    }
+
+    function updateMultiSelectLabel(containerId, optionsId) {
+      const opts = document
+        .getElementById(optionsId)
+        .querySelectorAll('input[type="checkbox"]');
+      const checked = [...opts].filter((c) => c.checked).map((c) => c.value);
+      const labelSpan = document.getElementById(`${containerId}-labels`);
+      if (checked.length === 0) {
+        labelSpan.textContent = 'Select options';
+      } else {
+        labelSpan.textContent = checked.join(', ');
+      }
+    }
+
+    // Collect the multi-select values for saving
+    function getMultiSelectValues(fieldName) {
+      const containerId = `multi-${fieldName}`;
+      const optionsId = `multi-options-${fieldName}`;
+      const opts = document
+        .getElementById(optionsId)
+        .querySelectorAll('input[type="checkbox"]');
+      const checked = [...opts].filter((c) => c.checked).map((c) => c.value);
+      return checked;
+    }
+
     // --------------------------------
-    // SAVE POOP ENTRY
+    // POOP ENTRIES
     // --------------------------------
     function savePoop() {
       const entry = {
+        id: Date.now().toString() + Math.random().toString(16).slice(2),
         datetime: document.getElementById('datetime').value,
         color: document.getElementById('color').value,
         consistency: document.getElementById('consistency').value
@@ -518,17 +765,11 @@
         if (field.type === 'text') {
           entry[field.name] = document.getElementById(`custom-${field.name}`)
             ?.value;
-        } else if (field.type === 'radio') {
-          // Get selected radio
-          const radios = document.getElementsByName(`custom-${field.name}`);
-          const selected = [...radios].find((r) => r.checked);
-          entry[field.name] = selected ? selected.value : '';
+        } else if (field.type === 'select') {
+          const val = document.getElementById(`custom-${field.name}`).value;
+          entry[field.name] = val;
         } else if (field.type === 'multiselect') {
-          // Get selected checkboxes
-          const checkboxes = document.getElementsByName(`custom-${field.name}`);
-          const values = [...checkboxes]
-            .filter((c) => c.checked)
-            .map((c) => c.value);
+          const values = getMultiSelectValues(field.name);
           entry[field.name] = values;
         }
       });
@@ -538,9 +779,60 @@
 
       // Clear form fields
       document.getElementById('poop-form').reset();
-      // If any radio/checkbox was selected, they'd be cleared by reset()
+      // Clear multi-select displays
+      customFields.forEach((field) => {
+        if (field.type === 'multiselect') {
+          const containerId = `multi-${field.name}`;
+          const optionsId = `multi-options-${field.name}`;
+          const labelSpan = document.getElementById(`${containerId}-labels`);
+          labelSpan.textContent = 'Select options';
+          const opts = document
+            .getElementById(optionsId)
+            .querySelectorAll('input[type="checkbox"]');
+          opts.forEach((o) => (o.checked = false));
+        }
+      });
 
       showNotification('🚽 Entry saved successfully!');
+      updateRecentPoops();
+    }
+
+    function deletePoopEntry(id) {
+      const ok = confirm('Are you sure you want to delete this entry?');
+      if (!ok) return;
+      poopEntries = poopEntries.filter((e) => e.id !== id);
+      localStorage.setItem('poopEntries', JSON.stringify(poopEntries));
+      showNotification('Poop entry deleted.');
+      updateRecentPoops();
+      renderCalendar(); // refresh calendar if on that page
+    }
+
+    function updateRecentPoops() {
+      const recentPoopsContainer = document.getElementById('recent-poops-list');
+      recentPoopsContainer.innerHTML = '';
+      // Sort by datetime desc
+      const sorted = [...poopEntries].sort(
+        (a, b) => DateTime.fromISO(b.datetime) - DateTime.fromISO(a.datetime)
+      );
+      const lastFive = sorted.slice(0, 5);
+
+      if (lastFive.length === 0) {
+        recentPoopsContainer.innerHTML = 'No entries yet.';
+        return;
+      }
+
+      lastFive.forEach((entry) => {
+        const div = document.createElement('div');
+        div.className = 'poop-item';
+        const date = DateTime.fromISO(entry.datetime).toFormat('MMM dd HH:mm');
+        div.innerHTML = `
+          <div class="poop-info">
+            ${date} - Color: ${entry.color}, Consistency: ${entry.consistency}
+          </div>
+          <button style="background:#f44336" onclick="deletePoopEntry('${entry.id}')">Delete</button>
+        `;
+        recentPoopsContainer.appendChild(div);
+      });
     }
 
     // --------------------------------
@@ -556,12 +848,15 @@
       document.getElementById('current-month').textContent =
         currentMonth.toFormat('MMMM yyyy');
 
-      // Calendar grid
-      calendarHTML += `<div class="calendar">`;
+      // Clear old content
+      const calContainer = document.getElementById('calendar-view');
+      calContainer.innerHTML = '';
 
       // Empty days (padding before 1st day)
       for (let i = 0; i < start.weekday - 1; i++) {
-        calendarHTML += `<div class="day"></div>`;
+        const emptyDiv = document.createElement('div');
+        emptyDiv.className = 'day';
+        calContainer.appendChild(emptyDiv);
       }
 
       // Days of the month
@@ -575,33 +870,90 @@
 
         const isToday = currentDate.hasSame(DateTime.now(), 'day');
 
-        calendarHTML += `
-          <div class="day ${isToday ? 'current-day' : ''}">
-            <div class="day-header">${day}</div>
-            ${entries
-              .map(
-                (entry) => `
-              <div class="poop-entry">
-                <div class="poop-indicator" style="background-color: ${getColorCode(
-                  entry.color
-                )}"></div>
-                <div class="poop-details">
-                  ${entry.consistency} | ${entry.color}
-                </div>
-              </div>
-            `
-              )
-              .join('')}
-          </div>
-        `;
+        const dayDiv = document.createElement('div');
+        dayDiv.className = `day ${isToday ? 'current-day' : ''}`;
+        dayDiv.innerHTML = `<div class="day-header">${day}</div>`;
+        // Poop indicators
+        entries.forEach((entry) => {
+          const indicator = document.createElement('div');
+          indicator.className = 'poop-indicator';
+          indicator.style.backgroundColor = getColorCode(entry.color);
+          dayDiv.appendChild(indicator);
+        });
+        // Show day details on click
+        dayDiv.onclick = () => openDayModal(dateString);
+
+        calContainer.appendChild(dayDiv);
       }
-      calendarHTML += `</div>`;
-      document.getElementById('calendar-view').innerHTML = calendarHTML;
     }
 
     function changeMonth(offset) {
       currentMonth = currentMonth.plus({ months: offset });
       renderCalendar();
+    }
+
+    // --------------------------------
+    // DAY MODAL
+    // --------------------------------
+    function openDayModal(dateString) {
+      const modal = document.getElementById('day-modal');
+      modal.classList.add('active');
+
+      const dateObj = DateTime.fromISO(dateString);
+      document.getElementById('day-modal-title').textContent = dateObj.toFormat('MMMM dd, yyyy');
+
+      const dayEntries = poopEntries
+        .filter((e) => DateTime.fromISO(e.datetime).toISODate() === dateString)
+        .sort(
+          (a, b) =>
+            DateTime.fromISO(a.datetime).valueOf() -
+            DateTime.fromISO(b.datetime).valueOf()
+        );
+
+      const body = document.getElementById('day-modal-body');
+      body.innerHTML = '';
+
+      if (dayEntries.length === 0) {
+        body.innerHTML = '<p>No entries for this day.</p>';
+        return;
+      }
+      dayEntries.forEach((entry) => {
+        const timeStr = DateTime.fromISO(entry.datetime).toFormat('HH:mm');
+        const div = document.createElement('div');
+        div.style.borderBottom = '1px solid #eee';
+        div.style.padding = '0.5rem 0';
+
+        let customHtml = '';
+        customFields.forEach((f) => {
+          const val = entry[f.name];
+          if (val !== undefined && val !== '') {
+            if (Array.isArray(val)) {
+              // multi-select
+              customHtml += `<div><strong>${f.name}:</strong> ${val.join(', ')}</div>`;
+            } else {
+              customHtml += `<div><strong>${f.name}:</strong> ${val}</div>`;
+            }
+          }
+        });
+
+        div.innerHTML = `
+          <div><strong>Time:</strong> ${timeStr}</div>
+          <div><strong>Color:</strong> ${entry.color}, <strong>Consistency:</strong> ${entry.consistency}</div>
+          ${customHtml}
+          <button style="background:#f44336" onclick="deletePoopEntry('${entry.id}'); closeDayModal(); renderCalendar();">Delete</button>
+        `;
+        body.appendChild(div);
+      });
+    }
+
+    function closeDayModal() {
+      document.getElementById('day-modal').classList.remove('active');
+    }
+
+    function modalBackgroundClick(e) {
+      if (e.target.id === 'day-modal') {
+        closeDayModal();
+      }
     }
 
     // --------------------------------
@@ -666,6 +1018,9 @@
         },
         'Time Distribution'
       );
+
+      // Custom Attributes Analysis
+      renderCustomAttributeCharts();
     }
 
     function updateChart(chartId, type, { labels, data }, label) {
@@ -698,29 +1053,74 @@
       });
     }
 
-    function getColorCode(color) {
-      const colors = {
-        brown: '#795548',
-        green: '#4CAF50',
-        yellow: '#FFEB3B',
-        black: '#212121',
-        red: '#F44336'
-      };
-      return colors[color] || '#9E9E9E';
-    }
+    // Create bar charts for each custom attribute with finite options
+    function renderCustomAttributeCharts() {
+      const container = document.getElementById('custom-attribute-charts');
+      container.innerHTML = '';
 
-    // --------------------------------
-    // NOTIFICATIONS
-    // --------------------------------
-    function showNotification(message) {
-      const notification = document.createElement('div');
-      notification.className = 'notification';
-      notification.textContent = message;
-      document.body.appendChild(notification);
+      customFields.forEach((field) => {
+        if (field.type === 'text') {
+          // we skip text because infinite values
+          return;
+        }
+        // We'll do a bar chart for single or multi-select
+        const wrapper = document.createElement('div');
+        wrapper.className = 'chart-container';
+        const canvas = document.createElement('canvas');
+        const chartId = `custom-chart-${field.name}`;
+        canvas.id = chartId;
+        wrapper.appendChild(canvas);
+        container.appendChild(wrapper);
 
-      setTimeout(() => {
-        notification.remove();
-      }, 3000);
+        // Count usage
+        const counts = {};
+        field.options.forEach((opt) => {
+          counts[opt] = 0;
+        });
+
+        poopEntries.forEach((e) => {
+          const val = e[field.name];
+          if (val !== undefined) {
+            if (Array.isArray(val)) {
+              // multi
+              val.forEach((v) => {
+                if (counts[v] !== undefined) {
+                  counts[v]++;
+                }
+              });
+            } else {
+              // single
+              if (counts[val] !== undefined) {
+                counts[val]++;
+              }
+            }
+          }
+        });
+
+        const labels = Object.keys(counts);
+        const data = labels.map((l) => counts[l]);
+
+        charts[chartId] = new Chart(canvas, {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: field.name,
+                data: data,
+                backgroundColor: '#36A2EB'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { beginAtZero: true }
+            }
+          }
+        });
+      });
     }
 
     // --------------------------------
@@ -754,12 +1154,27 @@
           const importedData = JSON.parse(e.target.result);
           if (importedData.customFields && importedData.poopEntries) {
             customFields = importedData.customFields;
+            // Migrate any old "radio"
+            customFields.forEach((f) => {
+              if (f.type === 'radio') {
+                f.type = 'select';
+              }
+            });
+
             poopEntries = importedData.poopEntries;
+            // ensure IDs
+            poopEntries.forEach((entry) => {
+              if (!entry.id) {
+                entry.id =
+                  Date.now().toString() + Math.random().toString(16).slice(2);
+              }
+            });
+
             localStorage.setItem('customFields', JSON.stringify(customFields));
             localStorage.setItem('poopEntries', JSON.stringify(poopEntries));
             showNotification('Data imported successfully!');
-            // Re-render in case user is on track page
             renderCustomFields();
+            renderSettingsPage();
           } else {
             showNotification('Invalid data format.');
           }
@@ -771,6 +1186,31 @@
     }
 
     // --------------------------------
+    // UTILITY
+    // --------------------------------
+    function getColorCode(color) {
+      const colors = {
+        brown: '#795548',
+        green: '#4CAF50',
+        yellow: '#FFEB3B',
+        black: '#212121',
+        red: '#F44336'
+      };
+      return colors[color] || '#9E9E9E';
+    }
+
+    function showNotification(message) {
+      const notification = document.createElement('div');
+      notification.className = 'notification';
+      notification.textContent = message;
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+
+    // --------------------------------
     // INITIALIZE
     // --------------------------------
     // Set default datetime
@@ -778,11 +1218,10 @@
       "yyyy-MM-dd'T'HH:mm"
     );
 
-    // Render custom fields on track page at load
+    // Render custom fields on track page
     renderCustomFields();
-
-    // Render calendar by default (if we want the track page by default, that's fine, but let's do a check)
-    // renderCalendar(); // (We keep track page as default visible.)
+    // Render recent poops
+    updateRecentPoops();
 
     // Notification permission
     if (Notification.permission !== 'denied') {
