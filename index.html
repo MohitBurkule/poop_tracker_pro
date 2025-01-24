@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>Poop Tracker Pro</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3.3.0/build/global/luxon.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #8BC34A;
+      --secondary-color: #FFEB3B;
+      --background: #F5F5F5;
+      --text-color: #333;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: var(--background);
+      color: var(--text-color);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 0.5rem;
+      color: var(--primary-color);
+    }
+
+    .page {
+      display: none;
+    }
+    .active-page {
+      display: block;
+    }
+
+    nav {
+      background: white;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    nav a {
+      cursor: pointer;
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 500;
+      padding: 5px 10px;
+      border-radius: 5px;
+      transition: all 0.3s;
+    }
+
+    nav a:hover {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .card {
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+
+    input[type='text'],
+    input[type='datetime-local'],
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    button {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s;
+      margin-right: 0.5rem;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      margin-top: 1rem;
+    }
+
+    .day {
+      background: white;
+      border: 1px solid #eee;
+      padding: 1rem;
+      min-height: 100px;
+      position: relative;
+      transition: all 0.3s;
+    }
+
+    .day:hover {
+      transform: scale(1.05);
+      z-index: 1;
+    }
+
+    .poop-indicator {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary-color);
+      display: inline-block;
+      margin: 2px;
+    }
+
+    .current-day {
+      background: #E8F5E9;
+      border-color: var(--primary-color);
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      background: var(--secondary-color);
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+      }
+      to {
+        transform: translateX(0);
+      }
+    }
+
+    .chart-container {
+      max-width: 600px;
+      margin: 2rem auto;
+      height: 400px;
+    }
+
+    .month-navigation {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-box {
+      background: #fafafa;
+      border-radius: 8px;
+      text-align: center;
+      padding: 1rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>Poop Tracker Pro</h1>
+
+  <nav>
+    <a onclick="showPage('track')">Track Poop</a>
+    <a onclick="showPage('calendar')">Calendar</a>
+    <a onclick="showPage('analysis')">Analysis</a>
+    <a onclick="showPage('settings')">Settings</a>
+  </nav>
+
+  <!-- Track Page -->
+  <div id="track" class="page active-page">
+    <div class="card">
+      <h2>Log New Poop</h2>
+      <div id="poop-form">
+        <div class="form-group">
+          <label>Date/Time</label>
+          <input type="datetime-local" id="datetime" required />
+        </div>
+
+        <div class="form-group">
+          <label>Color</label>
+          <select id="color">
+            <option value="brown">Brown</option>
+            <option value="green">Green</option>
+            <option value="yellow">Yellow</option>
+            <option value="black">Black</option>
+            <option value="red">Red</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Consistency (Bristol Stool Scale)</label>
+          <select id="consistency">
+            <option value="1">Type 1 - Separate hard lumps</option>
+            <option value="2">Type 2 - Lumpy sausage</option>
+            <option value="3">Type 3 - Sausage with cracks</option>
+            <option value="4">Type 4 - Smooth sausage</option>
+            <option value="5">Type 5 - Soft blobs</option>
+            <option value="6">Type 6 - Mushy</option>
+            <option value="7">Type 7 - Liquid</option>
+          </select>
+        </div>
+
+        <!-- Custom fields will be inserted here -->
+        <div id="custom-fields"></div>
+
+        <div class="form-group">
+          <!-- Preserving "Add Custom Attribute" button (though you can also do it in Settings) -->
+          <button onclick="addCustomFieldPrompt()">Add Custom Attribute</button>
+          <button onclick="savePoop()">Save Entry</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calendar Page -->
+  <div id="calendar" class="page">
+    <div class="card">
+      <div class="month-navigation">
+        <button onclick="changeMonth(-1)">← Previous</button>
+        <h2 id="current-month"></h2>
+        <button onclick="changeMonth(1)">Next →</button>
+      </div>
+      <div id="calendar-view"></div>
+    </div>
+  </div>
+
+  <!-- Analysis Page -->
+  <div id="analysis" class="page">
+    <div class="card">
+      <h2>Poop Analysis</h2>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <h3>📅 Total Entries</h3>
+          <p id="total-entries">0</p>
+        </div>
+        <div class="stat-box">
+          <h3>⏱️ Average/Day</h3>
+          <p id="daily-average">0</p>
+        </div>
+        <div class="stat-box">
+          <h3>🎨 Most Common Color</h3>
+          <p id="common-color">-</p>
+        </div>
+        <div class="stat-box">
+          <h3>💩 Common Consistency</h3>
+          <p id="common-consistency">-</p>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <canvas id="consistencyChart"></canvas>
+      </div>
+
+      <div class="chart-container">
+        <canvas id="timeChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Page -->
+  <div id="settings" class="page">
+    <div class="card">
+      <h2>Settings</h2>
+      <p>Manage your custom attributes, and import/export your data.</p>
+
+      <!-- Form to add custom fields -->
+      <div class="form-group">
+        <label for="newFieldName">Attribute Name</label>
+        <input type="text" id="newFieldName" placeholder="e.g. Smell" />
+      </div>
+      <div class="form-group">
+        <label for="newFieldType">Attribute Type</label>
+        <select id="newFieldType">
+          <option value="text">Text</option>
+          <option value="radio">Radio</option>
+          <option value="multiselect">Multi-select</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="newFieldOptions">Options (for Radio/Multi-select, comma separated)</label>
+        <input
+          type="text"
+          id="newFieldOptions"
+          placeholder="e.g. Mild,Strong,Overwhelming"
+        />
+      </div>
+      <div class="form-group">
+        <button onclick="addCustomFieldFromSettings()">Add Custom Field</button>
+      </div>
+
+      <hr />
+
+      <!-- Export / Import -->
+      <div class="form-group">
+        <button onclick="exportData()">Export Data</button>
+      </div>
+      <div class="form-group">
+        <label for="importFile">Import Data (JSON):</label>
+        <input type="file" id="importFile" accept=".json" />
+        <button onclick="importData()">Import</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DateTime = luxon.DateTime;
+    let currentMonth = DateTime.now();
+
+    // Attempt to parse customFields from localStorage; handle old (string array) format
+    let rawCustomFields = localStorage.getItem('customFields');
+    let customFields = [];
+    if (rawCustomFields) {
+      try {
+        let parsed = JSON.parse(rawCustomFields);
+        // If old format was array of strings, convert each to an object
+        if (Array.isArray(parsed)) {
+          // Check if the first element is a string => old format
+          if (parsed.length && typeof parsed[0] === 'string') {
+            parsed = parsed.map((fieldName) => ({
+              name: fieldName,
+              type: 'text',
+              options: []
+            }));
+          }
+          customFields = parsed;
+        }
+      } catch (e) {
+        // fallback
+        customFields = [];
+      }
+    }
+
+    let poopEntries = JSON.parse(localStorage.getItem('poopEntries') || '[]');
+    let charts = {};
+
+    // --------------------------------
+    // NAVIGATION + PAGE HANDLING
+    // --------------------------------
+    function showPage(pageId) {
+      document
+        .querySelectorAll('.page')
+        .forEach((page) => page.classList.remove('active-page'));
+      document.getElementById(pageId).classList.add('active-page');
+
+      if (pageId === 'calendar') renderCalendar();
+      if (pageId === 'analysis') updateAnalysis();
+
+      // Destroy existing charts when leaving analysis page
+      if (pageId !== 'analysis' && charts.consistencyChart) {
+        charts.consistencyChart.destroy();
+        charts.timeChart.destroy();
+      }
+    }
+
+    // --------------------------------
+    // CUSTOM FIELDS (SETTINGS & TRACK)
+    // --------------------------------
+    // Called from the track page button: Prompts user for name only, sets type=text
+    function addCustomFieldPrompt() {
+      const fieldName = prompt('Enter attribute name:');
+      if (fieldName) {
+        // Add as text type by default
+        const newField = {
+          name: fieldName,
+          type: 'text',
+          options: []
+        };
+        // Check if already exists
+        if (!customFields.find((f) => f.name === fieldName)) {
+          customFields.push(newField);
+          localStorage.setItem('customFields', JSON.stringify(customFields));
+          renderCustomFields(); // re-render
+          showNotification('New custom attribute added (type=text)!');
+        } else {
+          showNotification('Field name already exists!');
+        }
+      }
+    }
+
+    // Called from the Settings page form
+    function addCustomFieldFromSettings() {
+      const fieldName = document.getElementById('newFieldName').value.trim();
+      const fieldType = document.getElementById('newFieldType').value;
+      const fieldOptions = document
+        .getElementById('newFieldOptions')
+        .value.trim();
+
+      if (!fieldName) {
+        showNotification('Please enter a field name.');
+        return;
+      }
+
+      // Check if field name already exists
+      if (customFields.find((f) => f.name === fieldName)) {
+        showNotification('Field name already exists!');
+        return;
+      }
+
+      // For radio/multiselect, parse the options
+      let optionsArray = [];
+      if (fieldType === 'radio' || fieldType === 'multiselect') {
+        optionsArray = fieldOptions
+          ? fieldOptions.split(',').map((o) => o.trim())
+          : [];
+        if (!optionsArray.length) {
+          showNotification('Please specify options for radio/multiselect.');
+          return;
+        }
+      }
+
+      const newField = {
+        name: fieldName,
+        type: fieldType,
+        options: optionsArray
+      };
+
+      customFields.push(newField);
+      localStorage.setItem('customFields', JSON.stringify(customFields));
+
+      // Clear the form
+      document.getElementById('newFieldName').value = '';
+      document.getElementById('newFieldType').value = 'text';
+      document.getElementById('newFieldOptions').value = '';
+
+      showNotification(`Custom attribute "${fieldName}" added!`);
+      // Re-render custom fields on the track page if user navigates there
+      renderCustomFields();
+    }
+
+    // Renders the custom fields on the "Track Poop" page according to their type
+    function renderCustomFields() {
+      const container = document.getElementById('custom-fields');
+      container.innerHTML = ''; // Clear existing
+
+      customFields.forEach((field) => {
+        const div = document.createElement('div');
+        div.className = 'form-group';
+        div.innerHTML = `<label>${field.name}</label>`;
+
+        if (field.type === 'text') {
+          div.innerHTML += `<input type="text" id="custom-${field.name}">`;
+        } else if (field.type === 'radio') {
+          // Create radio buttons for each option
+          field.options.forEach((opt, idx) => {
+            const radioId = `custom-${field.name}-${idx}`;
+            div.innerHTML += `
+              <div>
+                <input type="radio" name="custom-${field.name}" id="${radioId}" value="${opt}">
+                <label for="${radioId}">${opt}</label>
+              </div>
+            `;
+          });
+        } else if (field.type === 'multiselect') {
+          // Create checkboxes for each option
+          field.options.forEach((opt, idx) => {
+            const checkId = `custom-${field.name}-${idx}`;
+            div.innerHTML += `
+              <div>
+                <input type="checkbox" name="custom-${field.name}" id="${checkId}" value="${opt}">
+                <label for="${checkId}">${opt}</label>
+              </div>
+            `;
+          });
+        }
+
+        container.appendChild(div);
+      });
+    }
+
+    // --------------------------------
+    // SAVE POOP ENTRY
+    // --------------------------------
+    function savePoop() {
+      const entry = {
+        datetime: document.getElementById('datetime').value,
+        color: document.getElementById('color').value,
+        consistency: document.getElementById('consistency').value
+      };
+
+      // Read custom fields
+      customFields.forEach((field) => {
+        if (field.type === 'text') {
+          entry[field.name] = document.getElementById(`custom-${field.name}`)
+            ?.value;
+        } else if (field.type === 'radio') {
+          // Get selected radio
+          const radios = document.getElementsByName(`custom-${field.name}`);
+          const selected = [...radios].find((r) => r.checked);
+          entry[field.name] = selected ? selected.value : '';
+        } else if (field.type === 'multiselect') {
+          // Get selected checkboxes
+          const checkboxes = document.getElementsByName(`custom-${field.name}`);
+          const values = [...checkboxes]
+            .filter((c) => c.checked)
+            .map((c) => c.value);
+          entry[field.name] = values;
+        }
+      });
+
+      poopEntries.push(entry);
+      localStorage.setItem('poopEntries', JSON.stringify(poopEntries));
+
+      // Clear form fields
+      document.getElementById('poop-form').reset();
+      // If any radio/checkbox was selected, they'd be cleared by reset()
+
+      showNotification('🚽 Entry saved successfully!');
+    }
+
+    // --------------------------------
+    // CALENDAR
+    // --------------------------------
+    function renderCalendar() {
+      const start = currentMonth.startOf('month');
+      const end = currentMonth.endOf('month');
+      const daysInMonth = end.day;
+      let calendarHTML = '';
+
+      // Month header
+      document.getElementById('current-month').textContent =
+        currentMonth.toFormat('MMMM yyyy');
+
+      // Calendar grid
+      calendarHTML += `<div class="calendar">`;
+
+      // Empty days (padding before 1st day)
+      for (let i = 0; i < start.weekday - 1; i++) {
+        calendarHTML += `<div class="day"></div>`;
+      }
+
+      // Days of the month
+      for (let day = 1; day <= daysInMonth; day++) {
+        const currentDate = currentMonth.set({ day });
+        const dateString = currentDate.toISODate();
+        const entries = poopEntries.filter((e) => {
+          const entryDate = DateTime.fromISO(e.datetime).toISODate();
+          return entryDate === dateString;
+        });
+
+        const isToday = currentDate.hasSame(DateTime.now(), 'day');
+
+        calendarHTML += `
+          <div class="day ${isToday ? 'current-day' : ''}">
+            <div class="day-header">${day}</div>
+            ${entries
+              .map(
+                (entry) => `
+              <div class="poop-entry">
+                <div class="poop-indicator" style="background-color: ${getColorCode(
+                  entry.color
+                )}"></div>
+                <div class="poop-details">
+                  ${entry.consistency} | ${entry.color}
+                </div>
+              </div>
+            `
+              )
+              .join('')}
+          </div>
+        `;
+      }
+      calendarHTML += `</div>`;
+      document.getElementById('calendar-view').innerHTML = calendarHTML;
+    }
+
+    function changeMonth(offset) {
+      currentMonth = currentMonth.plus({ months: offset });
+      renderCalendar();
+    }
+
+    // --------------------------------
+    // ANALYSIS
+    // --------------------------------
+    function updateAnalysis() {
+      // Update stats
+      document.getElementById('total-entries').textContent = poopEntries.length;
+      // (Rough daily average over last 30 days)
+      document.getElementById('daily-average').textContent = (
+        poopEntries.length / 30
+      ).toFixed(1);
+
+      // Most common color
+      const colorCounts = poopEntries.reduce((acc, { color }) => {
+        acc[color] = (acc[color] || 0) + 1;
+        return acc;
+      }, {});
+      document.getElementById('common-color').textContent =
+        Object.entries(colorCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
+
+      // Most common consistency
+      const consistencyCounts = poopEntries.reduce((acc, { consistency }) => {
+        acc[consistency] = (acc[consistency] || 0) + 1;
+        return acc;
+      }, {});
+      document.getElementById('common-consistency').textContent =
+        Object.entries(consistencyCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ||
+        '-';
+
+      // Update charts
+      updateChart(
+        'consistencyChart',
+        'pie',
+        {
+          labels: ['1', '2', '3', '4', '5', '6', '7'],
+          data: Array(7)
+            .fill()
+            .map(
+              (_, i) =>
+                poopEntries.filter((e) => e.consistency === String(i + 1)).length
+            )
+        },
+        'Consistency Distribution'
+      );
+
+      updateChart(
+        'timeChart',
+        'bar',
+        {
+          labels: Array(24)
+            .fill()
+            .map((_, i) => `${i}:00`),
+          data: Array(24)
+            .fill()
+            .map(
+              (_, hour) =>
+                poopEntries.filter(
+                  (e) => DateTime.fromISO(e.datetime).hour === hour
+                ).length
+            )
+        },
+        'Time Distribution'
+      );
+    }
+
+    function updateChart(chartId, type, { labels, data }, label) {
+      if (charts[chartId]) charts[chartId].destroy();
+
+      charts[chartId] = new Chart(document.getElementById(chartId), {
+        type: type,
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: label,
+              data: data,
+              backgroundColor: [
+                '#FF6384',
+                '#36A2EB',
+                '#FFCE56',
+                '#4BC0C0',
+                '#9966FF',
+                '#FF9F40',
+                '#EB5757'
+              ]
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+    }
+
+    function getColorCode(color) {
+      const colors = {
+        brown: '#795548',
+        green: '#4CAF50',
+        yellow: '#FFEB3B',
+        black: '#212121',
+        red: '#F44336'
+      };
+      return colors[color] || '#9E9E9E';
+    }
+
+    // --------------------------------
+    // NOTIFICATIONS
+    // --------------------------------
+    function showNotification(message) {
+      const notification = document.createElement('div');
+      notification.className = 'notification';
+      notification.textContent = message;
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+
+    // --------------------------------
+    // IMPORT/EXPORT
+    // --------------------------------
+    function exportData() {
+      const data = {
+        customFields,
+        poopEntries
+      };
+      const dataStr =
+        'data:text/json;charset=utf-8,' +
+        encodeURIComponent(JSON.stringify(data, null, 2));
+      const dlAnchor = document.createElement('a');
+      dlAnchor.setAttribute('href', dataStr);
+      dlAnchor.setAttribute('download', 'poop-tracker-data.json');
+      dlAnchor.click();
+    }
+
+    function importData() {
+      const fileInput = document.getElementById('importFile');
+      if (!fileInput.files.length) {
+        showNotification('No file selected!');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const importedData = JSON.parse(e.target.result);
+          if (importedData.customFields && importedData.poopEntries) {
+            customFields = importedData.customFields;
+            poopEntries = importedData.poopEntries;
+            localStorage.setItem('customFields', JSON.stringify(customFields));
+            localStorage.setItem('poopEntries', JSON.stringify(poopEntries));
+            showNotification('Data imported successfully!');
+            // Re-render in case user is on track page
+            renderCustomFields();
+          } else {
+            showNotification('Invalid data format.');
+          }
+        } catch (err) {
+          showNotification('Error parsing JSON file.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // --------------------------------
+    // INITIALIZE
+    // --------------------------------
+    // Set default datetime
+    document.getElementById('datetime').value = DateTime.now().toFormat(
+      "yyyy-MM-dd'T'HH:mm"
+    );
+
+    // Render custom fields on track page at load
+    renderCustomFields();
+
+    // Render calendar by default (if we want the track page by default, that's fine, but let's do a check)
+    // renderCalendar(); // (We keep track page as default visible.)
+
+    // Notification permission
+    if (Notification.permission !== 'denied') {
+      Notification.requestPermission().then((perm) => {
+        if (perm === 'granted') {
+          new Notification('Poop Tracker Ready!', {
+            body: 'You will receive daily reminders to log your poops!'
+          });
+        }
+      });
+    }
+
+    // Reminder check every hour
+    setInterval(() => {
+      const today = DateTime.now().toISODate();
+      const hasEntry = poopEntries.some(
+        (e) => DateTime.fromISO(e.datetime).toISODate() === today
+      );
+
+      if (!hasEntry && Notification.permission === 'granted') {
+        new Notification('Poop Tracking Reminder', {
+          body: "Don't forget to log today's bowel movements!"
+        });
+      }
+    }, 3600000);
+  </script>
+</body>
+</html>
