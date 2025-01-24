@@ -167,7 +167,6 @@
       grid-template-columns: repeat(7, 1fr);
       gap: 5px;
       margin-top: 1rem;
-      /* no fixed min-width so it shrinks on mobile if needed */
     }
 
     .day {
@@ -261,9 +260,11 @@
       margin-bottom: 5px;
       border-radius: 6px;
       align-items: center;
+      gap: 0.5rem;
     }
     .poop-info {
       font-size: 0.9rem;
+      flex: 1;
     }
 
     /* Day Details Modal */
@@ -365,6 +366,12 @@
     .custom-field-item:last-child {
       border-bottom: none;
     }
+
+    /* Edit Poop Modal */
+    #edit-poop-modal .modal-content {
+      width: 90%;
+      max-width: 600px;
+    }
   </style>
 </head>
 <body>
@@ -460,6 +467,19 @@
         <button class="close-modal" onclick="closeDayModal()">×</button>
       </div>
       <div id="day-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Edit Poop Modal -->
+  <div id="edit-poop-modal" class="modal" onclick="editModalBackgroundClick(event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Edit Poop Entry</h3>
+        <button class="close-modal" onclick="closeEditModal()">×</button>
+      </div>
+      <div id="edit-poop-form">
+        <!-- We'll dynamically insert the same fields as new poop, then add a "Save Changes" button -->
+      </div>
     </div>
   </div>
 
@@ -581,6 +601,9 @@
     localStorage.setItem('poopEntries', JSON.stringify(poopEntries));
 
     let charts = {};
+
+    // For editing
+    let editingPoopId = null; // track which poop is being edited
 
     // --------------------------------
     // NAVIGATION
@@ -713,54 +736,59 @@
       });
     }
 
-    // Render custom fields on "Track Poop" page
+    // Render custom fields on "Track Poop" page (for new poop)
     function renderCustomFields() {
       const container = document.getElementById('custom-fields');
       container.innerHTML = ''; // Clear existing
 
       customFields.forEach((field) => {
-        const div = document.createElement('div');
-        div.className = 'form-group';
-        div.innerHTML = `<label>${field.name}</label>`;
-
-        if (field.type === 'text') {
-          div.innerHTML += `<input type="text" id="custom-${field.name}" />`;
-        } else if (field.type === 'select') {
-          // Single-select dropdown
-          let selectHtml = `<select id="custom-${field.name}">`;
-          selectHtml += `<option value="">-- Select --</option>`;
-          field.options.forEach((opt) => {
-            selectHtml += `<option value="${opt}">${opt}</option>`;
-          });
-          selectHtml += `</select>`;
-          div.innerHTML += selectHtml;
-        } else if (field.type === 'multiselect') {
-          // A custom multi-select
-          const containerId = `multi-${field.name}`;
-          const optionsId = `multi-options-${field.name}`;
-          div.innerHTML += `
-            <div class="multi-select-container" id="${containerId}">
-              <div class="multi-select-display" onclick="toggleMultiSelect('${containerId}', '${optionsId}')">
-                <span id="${containerId}-labels">Select options</span>
-                <span>▼</span>
-              </div>
-              <div class="multi-select-options" id="${optionsId}">
-                ${field.options
-                  .map(
-                    (opt) => `
-                    <label>
-                      <input type="checkbox" value="${opt}" onchange="updateMultiSelectLabel('${containerId}', '${optionsId}')"/>
-                      ${opt}
-                    </label>
-                  `
-                  )
-                  .join('')}
-              </div>
-            </div>
-          `;
-        }
-        container.appendChild(div);
+        container.appendChild(createFieldElement(field, `custom-${field.name}`, false));
       });
+    }
+
+    // We'll reuse this for both "new poop" and "edit poop" forms
+    function createFieldElement(field, elementIdPrefix, isEdit) {
+      // "isEdit" indicates if this is for the Edit Poop form or the new Poop form
+      // elementIdPrefix is unique so we can handle read/write properly
+      const div = document.createElement('div');
+      div.className = 'form-group';
+      div.innerHTML = `<label>${field.name}</label>`;
+
+      if (field.type === 'text') {
+        div.innerHTML += `<input type="text" id="${elementIdPrefix}" />`;
+      } else if (field.type === 'select') {
+        let selectHtml = `<select id="${elementIdPrefix}">`;
+        selectHtml += `<option value="">-- Select --</option>`;
+        field.options.forEach((opt) => {
+          selectHtml += `<option value="${opt}">${opt}</option>`;
+        });
+        selectHtml += `</select>`;
+        div.innerHTML += selectHtml;
+      } else if (field.type === 'multiselect') {
+        const containerId = `${elementIdPrefix}-multiContainer`;
+        const optionsId = `${elementIdPrefix}-multiOptions`;
+        div.innerHTML += `
+          <div class="multi-select-container" id="${containerId}">
+            <div class="multi-select-display" onclick="toggleMultiSelect('${containerId}', '${optionsId}')">
+              <span id="${containerId}-labels">Select options</span>
+              <span>▼</span>
+            </div>
+            <div class="multi-select-options" id="${optionsId}">
+              ${field.options
+                .map(
+                  (opt) => `
+                  <label>
+                    <input type="checkbox" value="${opt}" onchange="updateMultiSelectLabel('${containerId}', '${optionsId}')"/>
+                    ${opt}
+                  </label>
+                `
+                )
+                .join('')}
+            </div>
+          </div>
+        `;
+      }
+      return div;
     }
 
     function toggleMultiSelect(containerId, optionsId) {
@@ -781,9 +809,9 @@
       }
     }
 
-    function getMultiSelectValues(fieldName) {
-      const containerId = `multi-${fieldName}`;
-      const optionsId = `multi-options-${fieldName}`;
+    function getMultiSelectValues(elementIdPrefix) {
+      const containerId = `${elementIdPrefix}-multiContainer`;
+      const optionsId = `${elementIdPrefix}-multiOptions`;
       const opts = document
         .getElementById(optionsId)
         .querySelectorAll('input[type="checkbox"]');
@@ -803,15 +831,13 @@
 
       // Read custom fields
       customFields.forEach((field) => {
+        const elemId = `custom-${field.name}`;
         if (field.type === 'text') {
-          entry[field.name] = document.getElementById(`custom-${field.name}`)
-            ?.value;
+          entry[field.name] = document.getElementById(elemId)?.value;
         } else if (field.type === 'select') {
-          const val = document.getElementById(`custom-${field.name}`).value;
-          entry[field.name] = val;
+          entry[field.name] = document.getElementById(elemId).value;
         } else if (field.type === 'multiselect') {
-          const values = getMultiSelectValues(field.name);
-          entry[field.name] = values;
+          entry[field.name] = getMultiSelectValues(elemId);
         }
       });
 
@@ -823,10 +849,10 @@
       // Also reset multi-select labels
       customFields.forEach((field) => {
         if (field.type === 'multiselect') {
-          const containerId = `multi-${field.name}`;
-          const optionsId = `multi-options-${field.name}`;
-          document.getElementById(`${containerId}-labels`).textContent =
-            'Select options';
+          const elemId = `custom-${field.name}`;
+          const containerId = `${elemId}-multiContainer`;
+          const optionsId = `${elemId}-multiOptions`;
+          document.getElementById(`${containerId}-labels`).textContent = 'Select options';
           const opts = document
             .getElementById(optionsId)
             .querySelectorAll('input[type="checkbox"]');
@@ -846,6 +872,7 @@
       showNotification('Poop entry deleted.');
       updateRecentPoops();
       renderCalendar(); // refresh calendar if on that page
+      closeDayModal(); // if open, close it so it doesn't show stale data
     }
 
     function updateRecentPoops() {
@@ -870,10 +897,153 @@
           <div class="poop-info">
             ${date} - Color: ${entry.color}, Consistency: ${entry.consistency}
           </div>
+          <button style="background:#2196F3" onclick="openEditPoop('${entry.id}')">Edit</button>
           <button style="background:#f44336" onclick="deletePoopEntry('${entry.id}')">Delete</button>
         `;
         recentPoopsContainer.appendChild(div);
       });
+    }
+
+    // --------------------------------
+    // EDIT POOP
+    // --------------------------------
+    function openEditPoop(id) {
+      editingPoopId = id;
+      const poop = poopEntries.find((p) => p.id === id);
+      if (!poop) return;
+
+      // Build the same form structure as "create"
+      const editForm = document.getElementById('edit-poop-form');
+      editForm.innerHTML = '';
+
+      // Date/Time
+      const dtGroup = document.createElement('div');
+      dtGroup.className = 'form-group';
+      dtGroup.innerHTML = `
+        <label>Date/Time</label>
+        <input type="datetime-local" id="edit-datetime" />
+      `;
+      editForm.appendChild(dtGroup);
+
+      // Color
+      const colorGroup = document.createElement('div');
+      colorGroup.className = 'form-group';
+      colorGroup.innerHTML = `
+        <label>Color</label>
+        <select id="edit-color">
+          <option value="brown">Brown</option>
+          <option value="green">Green</option>
+          <option value="yellow">Yellow</option>
+          <option value="black">Black</option>
+          <option value="red">Red</option>
+        </select>
+      `;
+      editForm.appendChild(colorGroup);
+
+      // Consistency
+      const consGroup = document.createElement('div');
+      consGroup.className = 'form-group';
+      consGroup.innerHTML = `
+        <label>Consistency (Bristol Stool Scale)</label>
+        <select id="edit-consistency">
+          <option value="1">Type 1 - Separate hard lumps</option>
+          <option value="2">Type 2 - Lumpy sausage</option>
+          <option value="3">Type 3 - Sausage with cracks</option>
+          <option value="4">Type 4 - Smooth sausage</option>
+          <option value="5">Type 5 - Soft blobs</option>
+          <option value="6">Type 6 - Mushy</option>
+          <option value="7">Type 7 - Liquid</option>
+        </select>
+      `;
+      editForm.appendChild(consGroup);
+
+      // Custom fields
+      customFields.forEach((field) => {
+        const elementIdPrefix = `edit-custom-${field.name}`;
+        const divEl = createFieldElement(field, elementIdPrefix, true);
+        editForm.appendChild(divEl);
+      });
+
+      // Save button
+      const btnGroup = document.createElement('div');
+      btnGroup.className = 'form-group';
+      btnGroup.innerHTML = `<button onclick="saveEditedPoop()">Save Changes</button>`;
+      editForm.appendChild(btnGroup);
+
+      // Pre-fill form with existing data
+      document.getElementById('edit-datetime').value = DateTime.fromISO(
+        poop.datetime
+      ).toFormat("yyyy-MM-dd'T'HH:mm");
+      document.getElementById('edit-color').value = poop.color;
+      document.getElementById('edit-consistency').value = poop.consistency;
+
+      // For custom fields
+      customFields.forEach((field) => {
+        const val = poop[field.name];
+        if (val !== undefined) {
+          const elemId = `edit-custom-${field.name}`;
+          if (field.type === 'text') {
+            document.getElementById(elemId).value = val;
+          } else if (field.type === 'select') {
+            document.getElementById(elemId).value = val;
+          } else if (field.type === 'multiselect') {
+            // val is array
+            const containerId = `${elemId}-multiContainer`;
+            const optionsId = `${elemId}-multiOptions`;
+            const checkboxes = document
+              .getElementById(optionsId)
+              .querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach((c) => {
+              c.checked = val.includes(c.value);
+            });
+            updateMultiSelectLabel(containerId, optionsId);
+          }
+        }
+      });
+
+      // Show modal
+      document.getElementById('edit-poop-modal').classList.add('active');
+    }
+
+    function closeEditModal() {
+      document.getElementById('edit-poop-modal').classList.remove('active');
+    }
+
+    function editModalBackgroundClick(e) {
+      if (e.target.id === 'edit-poop-modal') {
+        closeEditModal();
+      }
+    }
+
+    function saveEditedPoop() {
+      if (!editingPoopId) return;
+      const poop = poopEntries.find((p) => p.id === editingPoopId);
+      if (!poop) return;
+
+      // Update fields
+      poop.datetime = document.getElementById('edit-datetime').value;
+      poop.color = document.getElementById('edit-color').value;
+      poop.consistency = document.getElementById('edit-consistency').value;
+
+      // Custom fields
+      customFields.forEach((field) => {
+        const elemId = `edit-custom-${field.name}`;
+        if (field.type === 'text') {
+          poop[field.name] = document.getElementById(elemId)?.value;
+        } else if (field.type === 'select') {
+          poop[field.name] = document.getElementById(elemId).value;
+        } else if (field.type === 'multiselect') {
+          poop[field.name] = getMultiSelectValues(elemId);
+        }
+      });
+
+      localStorage.setItem('poopEntries', JSON.stringify(poopEntries));
+      showNotification('Poop updated successfully!');
+
+      closeEditModal();
+      updateRecentPoops();
+      renderCalendar();
+      closeDayModal(); // if day modal was open, we close it so user can see fresh data
     }
 
     // --------------------------------
@@ -976,7 +1146,8 @@
           <div><strong>Time:</strong> ${timeStr}</div>
           <div><strong>Color:</strong> ${entry.color}, <strong>Consistency:</strong> ${entry.consistency}</div>
           ${customHtml}
-          <button style="background:#f44336" onclick="deletePoopEntry('${entry.id}'); closeDayModal(); renderCalendar();">Delete</button>
+          <button style="background:#2196F3" onclick="openEditPoop('${entry.id}')">Edit</button>
+          <button style="background:#f44336" onclick="deletePoopEntry('${entry.id}')">Delete</button>
         `;
         body.appendChild(div);
       });
@@ -1248,7 +1419,7 @@
 
       setTimeout(() => {
         notification.remove();
-      }, 2500);
+      }, 2500); // do NOT change this duration
     }
 
     // --------------------------------
