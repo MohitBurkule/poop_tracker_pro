@@ -19,6 +19,11 @@
       --box-shadow-color: rgba(0, 0, 0, 0.1);
     }
 
+    /* Base styling */
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
@@ -31,16 +36,11 @@
       text-align: center;
       margin-bottom: 0.5rem;
       color: var(--primary-color);
+      margin-top: 0;
     }
 
-    .page {
-      display: none;
-    }
-    .active-page {
-      display: block;
-    }
-
-    nav {
+    /* NAVIGATION - Desktop top bar */
+    nav.top-nav {
       background: var(--card-bg);
       padding: 1rem;
       border-radius: 10px;
@@ -51,8 +51,7 @@
       flex-wrap: wrap;
       gap: 20px;
     }
-
-    nav a {
+    nav.top-nav a {
       cursor: pointer;
       color: var(--primary-color);
       text-decoration: none;
@@ -61,10 +60,56 @@
       border-radius: 5px;
       transition: all 0.3s;
     }
-
-    nav a:hover {
+    nav.top-nav a:hover {
       background: var(--primary-color);
       color: #fff;
+    }
+
+    /* NAVIGATION - Mobile bottom bar */
+    nav.bottom-nav {
+      display: none; /* hidden by default on desktop */
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--card-bg);
+      box-shadow: 0 -2px 5px var(--box-shadow-color);
+      padding: 0.5rem 0;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 999;
+    }
+    nav.bottom-nav a {
+      text-decoration: none;
+      color: var(--primary-color);
+      font-size: 1.4rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    nav.bottom-nav a span {
+      font-size: 0.7rem; /* label under the icon */
+      margin-top: 2px;
+    }
+
+    /* Hide top nav on mobile, show bottom nav */
+    @media (max-width: 600px) {
+      nav.top-nav {
+        display: none;
+      }
+      nav.bottom-nav {
+        display: flex;
+      }
+      body {
+        padding-bottom: 60px; /* so content isn't behind bottom nav */
+      }
+    }
+
+    .page {
+      display: none;
+    }
+    .active-page {
+      display: block;
     }
 
     .card {
@@ -76,7 +121,7 @@
     }
 
     .form-group {
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.3rem;
     }
 
     label {
@@ -85,11 +130,13 @@
       font-weight: 500;
     }
 
+    /* Ensure inputs, selects, textareas fit well on mobile */
     input[type='text'],
     input[type='datetime-local'],
     select,
     textarea {
       width: 100%;
+      max-width: 100%;
       padding: 0.7rem;
       border: 1px solid #ddd;
       border-radius: 8px;
@@ -107,38 +154,35 @@
       margin-top: 0.25rem;
       margin-bottom: 0.25rem;
     }
-
     button:hover {
       transform: translateY(-2px);
     }
 
+    /* Calendar stuff */
     .calendar-container {
-      overflow-x: auto; /* prevent horizontal overflow on mobile */
+      overflow-x: auto;
     }
-
     .calendar {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       gap: 5px;
-      min-width: 600px; /* so it can scroll on narrow screens */
       margin-top: 1rem;
+      /* no fixed min-width so it shrinks on mobile if needed */
     }
 
     .day {
       background: var(--card-bg);
       border: 1px solid #eee;
       padding: 0.7rem;
-      min-height: 90px;
+      min-height: 80px;
       position: relative;
       transition: all 0.3s;
       cursor: pointer;
     }
-
     .day:hover {
       transform: scale(1.03);
       z-index: 1;
     }
-
     .poop-indicator {
       width: 16px;
       height: 16px;
@@ -147,12 +191,12 @@
       display: inline-block;
       margin: 2px;
     }
-
     .current-day {
       background: #E8F5E9;
       border-color: var(--primary-color);
     }
 
+    /* Toast notification (custom "alert") */
     .notification {
       position: fixed;
       top: 20px;
@@ -164,7 +208,6 @@
       animation: slideIn 0.3s ease-out;
       z-index: 9999;
     }
-
     @keyframes slideIn {
       from {
         transform: translateX(100%);
@@ -195,7 +238,6 @@
       gap: 1rem;
       margin-bottom: 2rem;
     }
-
     .stat-box {
       background: #fafafa;
       border-radius: 8px;
@@ -323,24 +365,27 @@
     .custom-field-item:last-child {
       border-bottom: none;
     }
-
-    /* Extra spacing for buttons in form groups on mobile */
-    @media (max-width: 600px) {
-      .form-group button {
-        margin-right: 0;
-        margin-bottom: 0.5rem;
-      }
-    }
   </style>
 </head>
 <body>
+
+  <!-- Title visible on all devices -->
   <h1>Poop Tracker Pro</h1>
 
-  <nav>
+  <!-- TOP NAV (Desktop) -->
+  <nav class="top-nav">
     <a onclick="showPage('track')">Track Poop</a>
     <a onclick="showPage('calendar')">Calendar</a>
     <a onclick="showPage('analysis')">Analysis</a>
     <a onclick="showPage('settings')">Settings</a>
+  </nav>
+
+  <!-- BOTTOM NAV (Mobile) -->
+  <nav class="bottom-nav">
+    <a onclick="showPage('track')">💩<span>Track</span></a>
+    <a onclick="showPage('calendar')">📅<span>Calendar</span></a>
+    <a onclick="showPage('analysis')">📊<span>Analysis</span></a>
+    <a onclick="showPage('settings')">⚙️<span>Settings</span></a>
   </nav>
 
   <!-- Track Page -->
@@ -414,9 +459,7 @@
         <h3 id="day-modal-title"></h3>
         <button class="close-modal" onclick="closeDayModal()">×</button>
       </div>
-      <div id="day-modal-body">
-        <!-- Poop details for the day get injected here -->
-      </div>
+      <div id="day-modal-body"></div>
     </div>
   </div>
 
@@ -511,7 +554,7 @@
     const DateTime = luxon.DateTime;
     let currentMonth = DateTime.now();
 
-    // Attempt to parse customFields from localStorage
+    // Attempt to parse customFields from localStorage (with migration from "radio" => "select")
     let rawCustomFields = localStorage.getItem('customFields');
     let customFields = [];
     if (rawCustomFields) {
@@ -609,12 +652,13 @@
       customFields.push(newField);
       localStorage.setItem('customFields', JSON.stringify(customFields));
 
+      showNotification(`Custom attribute "${fieldName}" added!`);
+
       // Clear the form
       document.getElementById('newFieldName').value = '';
       document.getElementById('newFieldType').value = 'text';
       document.getElementById('newFieldOptions').value = '';
 
-      showNotification(`Custom attribute "${fieldName}" added!`);
       renderSettingsPage();
       renderCustomFields(); // refresh track page fields
     }
@@ -624,7 +668,7 @@
       const hasData = poopEntries.some((entry) => entry[fieldName]);
       let confirmMsg = `Are you sure you want to delete the attribute "${fieldName}"?`;
       if (hasData) {
-        confirmMsg += `\nWarning: This will remove the data from existing entries!`;
+        confirmMsg += `\n(This removes data from all existing entries!)`;
       }
       const ok = confirm(confirmMsg);
       if (!ok) return;
@@ -694,7 +738,6 @@
           // A custom multi-select
           const containerId = `multi-${field.name}`;
           const optionsId = `multi-options-${field.name}`;
-          // We store the selected values in an array
           div.innerHTML += `
             <div class="multi-select-container" id="${containerId}">
               <div class="multi-select-display" onclick="toggleMultiSelect('${containerId}', '${optionsId}')">
@@ -704,7 +747,7 @@
               <div class="multi-select-options" id="${optionsId}">
                 ${field.options
                   .map(
-                    (opt, i) => `
+                    (opt) => `
                     <label>
                       <input type="checkbox" value="${opt}" onchange="updateMultiSelectLabel('${containerId}', '${optionsId}')"/>
                       ${opt}
@@ -738,15 +781,13 @@
       }
     }
 
-    // Collect the multi-select values for saving
     function getMultiSelectValues(fieldName) {
       const containerId = `multi-${fieldName}`;
       const optionsId = `multi-options-${fieldName}`;
       const opts = document
         .getElementById(optionsId)
         .querySelectorAll('input[type="checkbox"]');
-      const checked = [...opts].filter((c) => c.checked).map((c) => c.value);
-      return checked;
+      return [...opts].filter((c) => c.checked).map((c) => c.value);
     }
 
     // --------------------------------
@@ -779,13 +820,13 @@
 
       // Clear form fields
       document.getElementById('poop-form').reset();
-      // Clear multi-select displays
+      // Also reset multi-select labels
       customFields.forEach((field) => {
         if (field.type === 'multiselect') {
           const containerId = `multi-${field.name}`;
           const optionsId = `multi-options-${field.name}`;
-          const labelSpan = document.getElementById(`${containerId}-labels`);
-          labelSpan.textContent = 'Select options';
+          document.getElementById(`${containerId}-labels`).textContent =
+            'Select options';
           const opts = document
             .getElementById(optionsId)
             .querySelectorAll('input[type="checkbox"]');
@@ -793,8 +834,8 @@
         }
       });
 
-      showNotification('🚽 Entry saved successfully!');
-      updateRecentPoops();
+      showNotification('Poop saved successfully!');
+      updateRecentPoops(); // Immediately refresh last 5
     }
 
     function deletePoopEntry(id) {
@@ -842,13 +883,10 @@
       const start = currentMonth.startOf('month');
       const end = currentMonth.endOf('month');
       const daysInMonth = end.day;
-      let calendarHTML = '';
 
-      // Month header
       document.getElementById('current-month').textContent =
         currentMonth.toFormat('MMMM yyyy');
 
-      // Clear old content
       const calContainer = document.getElementById('calendar-view');
       calContainer.innerHTML = '';
 
@@ -863,24 +901,21 @@
       for (let day = 1; day <= daysInMonth; day++) {
         const currentDate = currentMonth.set({ day });
         const dateString = currentDate.toISODate();
-        const entries = poopEntries.filter((e) => {
-          const entryDate = DateTime.fromISO(e.datetime).toISODate();
-          return entryDate === dateString;
-        });
-
+        const entries = poopEntries.filter(
+          (e) => DateTime.fromISO(e.datetime).toISODate() === dateString
+        );
         const isToday = currentDate.hasSame(DateTime.now(), 'day');
 
         const dayDiv = document.createElement('div');
         dayDiv.className = `day ${isToday ? 'current-day' : ''}`;
         dayDiv.innerHTML = `<div class="day-header">${day}</div>`;
-        // Poop indicators
+
         entries.forEach((entry) => {
           const indicator = document.createElement('div');
           indicator.className = 'poop-indicator';
           indicator.style.backgroundColor = getColorCode(entry.color);
           dayDiv.appendChild(indicator);
         });
-        // Show day details on click
         dayDiv.onclick = () => openDayModal(dateString);
 
         calContainer.appendChild(dayDiv);
@@ -900,7 +935,9 @@
       modal.classList.add('active');
 
       const dateObj = DateTime.fromISO(dateString);
-      document.getElementById('day-modal-title').textContent = dateObj.toFormat('MMMM dd, yyyy');
+      document.getElementById('day-modal-title').textContent = dateObj.toFormat(
+        'MMMM dd, yyyy'
+      );
 
       const dayEntries = poopEntries
         .filter((e) => DateTime.fromISO(e.datetime).toISODate() === dateString)
@@ -917,18 +954,14 @@
         body.innerHTML = '<p>No entries for this day.</p>';
         return;
       }
+
       dayEntries.forEach((entry) => {
         const timeStr = DateTime.fromISO(entry.datetime).toFormat('HH:mm');
-        const div = document.createElement('div');
-        div.style.borderBottom = '1px solid #eee';
-        div.style.padding = '0.5rem 0';
-
         let customHtml = '';
         customFields.forEach((f) => {
           const val = entry[f.name];
           if (val !== undefined && val !== '') {
             if (Array.isArray(val)) {
-              // multi-select
               customHtml += `<div><strong>${f.name}:</strong> ${val.join(', ')}</div>`;
             } else {
               customHtml += `<div><strong>${f.name}:</strong> ${val}</div>`;
@@ -936,6 +969,9 @@
           }
         });
 
+        const div = document.createElement('div');
+        div.style.borderBottom = '1px solid #eee';
+        div.style.padding = '0.5rem 0';
         div.innerHTML = `
           <div><strong>Time:</strong> ${timeStr}</div>
           <div><strong>Color:</strong> ${entry.color}, <strong>Consistency:</strong> ${entry.consistency}</div>
@@ -1025,15 +1061,14 @@
 
     function updateChart(chartId, type, { labels, data }, label) {
       if (charts[chartId]) charts[chartId].destroy();
-
       charts[chartId] = new Chart(document.getElementById(chartId), {
-        type: type,
+        type,
         data: {
-          labels: labels,
+          labels,
           datasets: [
             {
-              label: label,
-              data: data,
+              label,
+              data,
               backgroundColor: [
                 '#FF6384',
                 '#36A2EB',
@@ -1060,7 +1095,7 @@
 
       customFields.forEach((field) => {
         if (field.type === 'text') {
-          // we skip text because infinite values
+          // skip text because infinite possible values
           return;
         }
         // We'll do a bar chart for single or multi-select
@@ -1107,7 +1142,7 @@
             datasets: [
               {
                 label: field.name,
-                data: data,
+                data,
                 backgroundColor: '#36A2EB'
               }
             ]
@@ -1138,6 +1173,8 @@
       dlAnchor.setAttribute('href', dataStr);
       dlAnchor.setAttribute('download', 'poop-tracker-data.json');
       dlAnchor.click();
+
+      showNotification('Data exported!');
     }
 
     function importData() {
@@ -1173,8 +1210,11 @@
             localStorage.setItem('customFields', JSON.stringify(customFields));
             localStorage.setItem('poopEntries', JSON.stringify(poopEntries));
             showNotification('Data imported successfully!');
+
             renderCustomFields();
             renderSettingsPage();
+            updateRecentPoops(); // refresh track page list
+            renderCalendar();    // refresh calendar
           } else {
             showNotification('Invalid data format.');
           }
@@ -1199,6 +1239,7 @@
       return colors[color] || '#9E9E9E';
     }
 
+    // Custom toast notifications
     function showNotification(message) {
       const notification = document.createElement('div');
       notification.className = 'notification';
@@ -1207,7 +1248,7 @@
 
       setTimeout(() => {
         notification.remove();
-      }, 3000);
+      }, 2500);
     }
 
     // --------------------------------
@@ -1218,12 +1259,11 @@
       "yyyy-MM-dd'T'HH:mm"
     );
 
-    // Render custom fields on track page
+    // Render track page items on load
     renderCustomFields();
-    // Render recent poops
     updateRecentPoops();
 
-    // Notification permission
+    // Request notification permission for reminders
     if (Notification.permission !== 'denied') {
       Notification.requestPermission().then((perm) => {
         if (perm === 'granted') {
